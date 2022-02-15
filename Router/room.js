@@ -1,17 +1,14 @@
 import express from 'express';
-import * as chatController from "../Controller/room.js";
+import * as roomController from "../Controller/room.js";
+import * as chatController from "../Controller/chat.js";
 
 const router = express.Router();
 
 
-// GET /tweet
-// GET /tweets?username=:username
-router.get('/', chatController.getChats);
+router.get('/', roomController.getRooms);
 
-// GET /tweets/:id
-router.get('/:id', chatController.getChat);
+// router.get('/:roomname', chatController.getChats);
 
-// POST /tweeets
-router.post('/', chatController.createChat);
+router.post('/:roomname', chatController.createChat);
 
 export default router;

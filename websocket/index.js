@@ -39,10 +39,10 @@ class Socket {
         );
         return;
       }
-      console.log("Server request");
-
+      console.log("server socket start");
       let connection = request.accept("echo-protocol", request.origin);
-      console.log(new Date() + " Connection accepted.");
+      console.log(request)
+
       connection.on("message", function (message) {
         if (message.type === "utf8") {
           console.log("Received Message: " + message.utf8Data);
@@ -54,11 +54,13 @@ class Socket {
           connection.sendBytes(message.binaryData);
         }
       });
+
       connection.on("close", function (reasonCode, description) {
         console.log(
           new Date() + " Peer " + connection.remoteAddress + " disconnected."
         );
       });
+
     });
   }
 }
