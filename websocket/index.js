@@ -8,59 +8,33 @@ export function initSocket(server) {
   }
 }
 
-function originIsAllowed(origin) {
-  // put logic here to detect whether the specified origin is allowed.
-  if (origin.includes("localhost:3000")) {
-    return true;
-  }
-  return false;
-}
-
 export function getSocket() {
   return socket;
 }
 
+let sockets = [];
 class Socket {
   constructor(server) {
-    this.io = new Server({
+    this.wss = new Server({
       httpServer: server,
-      autoAcceptConnections: false,
+      autoAcceptConnections: true,
     });
 
-    this.io.on("request", function (request) {
-      if (!originIsAllowed(request.origin)) {
-        // Make sure we only accept requests from an allowed origin
-        request.reject();
-        console.log(
-          new Date() +
-            " Connection from origin " +
-            request.origin +
-            " rejected."
-        );
-        return;
-      }
+    this.wss.on("connect", function (socket) {
       console.log("server socket start");
-      let connection = request.accept("echo-protocol", request.origin);
-      console.log(request)
-
-      connection.on("message", function (message) {
-        if (message.type === "utf8") {
-          console.log("Received Message: " + message.utf8Data);
-          connection.sendUTF(message.utf8Data);
-        } else if (message.type === "binary") {
-          console.log(
-            "Received Binary Message of " + message.binaryData.length + " bytes"
-          );
-          connection.sendBytes(message.binaryData);
+      socket["username"] = "anon"
+      sockets.push(socket)
+      socket.on("message", (msg) => {
+        const message = JSON.parse(msg.utf8Data)
+        switch (message.type) {
+          case "Username":
+            socket["username"] = message.username;
+            break;
+          case "Message":
+            sockets.forEach((asocket) => asocket.send(`${socket.username}: ${message.text}`))
+            break;
         }
-      });
-
-      connection.on("close", function (reasonCode, description) {
-        console.log(
-          new Date() + " Peer " + connection.remoteAddress + " disconnected."
-        );
-      });
-
+      })
     });
   }
 }
