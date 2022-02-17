@@ -1,10 +1,10 @@
 let rooms = [{
     id: "1",
-    name: "roomTest1",
+    roomname: "roomTest1",
     createdAt: new Date().toString(),
 }, {
     id: "2",
-    name: "roomTest2",
+    roomname: "roomTest2",
     createdAt: new Date().toString(),
 }]
 
