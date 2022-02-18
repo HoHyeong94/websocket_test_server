@@ -26,60 +26,70 @@ class Socket {
 
     this.wss.on("connect", function (socket) {
       console.log("server socket start");
-      socket["username"] = "guest"
-      
+      socket["username"] = "guest";
+
       socket.on("message", (msg) => {
-        const message = JSON.parse(msg.utf8Data)
-        console.log(message)
+        const message = JSON.parse(msg.utf8Data);
+        console.log(message);
         switch (message.type) {
           case "init":
-            console.log("INIT")
-            console.log(clients.size)
             socket["username"] = message.username;
             socket["userid"] = message.userid;
             socket["roomname"] = false;
-            if(!clients.has(message.userid)) {
+            if (!clients.has(message.userid)) {
               clients.set(message.userid, socket);
             }
             break;
-          case "join":
-            console.log("JOIN")
-            clients.get(message.userid).roomname = message.roomname;
-            break;
-          case "message":
-            console.log("MESSAGE")
-            let data = {
-              type:"message",
-              username: message.username,
-              roomname: message.roomname,
-              text: `${message.username}: ${message.text}`
-            }
-            for (const value of clients.values()) {
-              if (value.roomname === data.roomname) {
-                value.send(JSON.stringify(data));
-              }
-            }
-            break;
-          case "exit":
-            console.log("EXIT")
-            clients.get(message.userid).roomname = false;
-            break;
           case "createroom":
-            console.log("CREATEROOM")
+            console.log("CREATEROOM");
             let Data = {
               hostid: message.id,
               hostname: message.username,
-              roomname: message.roomname
-            }
-            roomLists.data.push(Data)
-            clients.forEach((client) => client.send(JSON.stringify(roomLists)))
+              roomname: message.roomname,
+            };
+            roomLists.data.push(Data);
+            clients.forEach((client) => client.send(JSON.stringify(roomLists)));
             break;
           case "roomlist":
-            console.log("ENTERROOMLIST")
-            clients.forEach((client) => client.send(JSON.stringify(roomLists)))
+            console.log("ENTERROOMLIST");
+            clients.forEach((client) => client.send(JSON.stringify(roomLists)));
+            break;
+          case "join_room":
+            socket.roomname = message.roomname;
+            socket.send(
+              JSON.stringify({ type: "welcome", roomname: message.roomname })
+            );
+            break;
+          case "offer":
+            for (const value of clients.values()) {
+              if (value.username === message.username) continue;
+              if (value.roomname === message.roomname) {
+                value.send(
+                  JSON.stringify({
+                    type: "offer",
+                    offer: message.offer,
+                    roomname: message.roomname,
+                  })
+                );
+              }
+            }
+            break;
+          case "answer":
+            for (const value of clients.values()) {
+              if (value.username === message.username) continue;
+              if (value.roomname === message.roomname) {
+                value.send(
+                  JSON.stringify({
+                    type: "answer",
+                    answer: message.answer,
+                    roomname: message.roomname,
+                  })
+                );
+              }
+            }
             break;
         }
-      })
+      });
     });
   }
 }
