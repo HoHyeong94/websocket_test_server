@@ -56,9 +56,17 @@ class Socket {
             break;
           case "join_room":
             socket.roomname = message.roomname;
-            socket.send(
-              JSON.stringify({ type: "welcome", roomname: message.roomname })
-            );
+            for (const value of clients.values()) {
+              if (value.username === message.username) continue;
+              if (value.roomname === message.roomname) {
+                value.send(
+                  JSON.stringify({
+                    type: "welcome",
+                    roomname: message.roomname,
+                  })
+                );
+              }
+            }
             break;
           case "offer":
             for (const value of clients.values()) {
@@ -82,6 +90,20 @@ class Socket {
                   JSON.stringify({
                     type: "answer",
                     answer: message.answer,
+                    roomname: message.roomname,
+                  })
+                );
+              }
+            }
+            break;
+          case "ice":
+            for (const value of clients.values()) {
+              if (value.username === message.username) continue;
+              if (value.roomname === message.roomname) {
+                value.send(
+                  JSON.stringify({
+                    type: "ice",
+                    candidate: message.candidate,
                     roomname: message.roomname,
                   })
                 );
