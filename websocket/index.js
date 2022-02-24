@@ -129,6 +129,17 @@ class Socket {
             break;
             case "exit":
               console.log("EXIT")
+              for (const value of clients.values()) {
+                if (value.roomname === message.roomname) {
+                  value.send(
+                    JSON.stringify({
+                      type: "exit",
+                      username: message.username,
+                      userid: message.userid,
+                    })
+                  );
+                }
+              }
               clients.get(message.userid).roomname = false;
               break;
         }
