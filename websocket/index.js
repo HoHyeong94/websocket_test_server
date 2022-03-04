@@ -36,18 +36,16 @@ class Socket {
             socket["username"] = message.username;
             socket["userid"] = message.userid;
             socket["roomname"] = false;
-            socket["offer"] = false;
-            socket["answer"] = false;
             if (!clients.has(message.userid)) {
               clients.set(message.userid, socket);
             }
             break;
-          case "all_users":
+          case "connected_users":
             socket.roomname = message.roomname;
-            let allUsers = [];
+            let connectedUsers = [];
             for (const [key, value] of clients) {
               if (value.roomname === message.roomname) {
-                allUsers.push({
+                connectedUsers.push({
                   username: value.username,
                   userid: value.userid,
                   roomname: value.roomname
@@ -55,18 +53,18 @@ class Socket {
               }
             }
             socket.send(JSON.stringify({
-              type: "all_users",
-              data: allUsers
+              type: "connected_users",
+              connectedUsers: connectedUsers
             }));
             break;
           case "createroom":
             console.log("CREATEROOM");
-            let Data = {
+            let info = {
               hostid: message.id,
               hostname: message.username,
               roomname: message.roomname,
             };
-            roomLists.data.push(Data);
+            roomLists.data.push(info);
             clients.forEach((client) => client.send(JSON.stringify(roomLists)));
             break;
           case "roomlist":
@@ -77,16 +75,14 @@ class Socket {
             for (const value of clients.values()) {
               if (
                 value.roomname === message.roomname &&
-                value.userid === message.userid
+                value.userid === message.remoteUserid
               ) {
                 value.send(
                   JSON.stringify({
                     type: "offer",
                     offer: message.offer,
-                    userid: value.userid,
-                    username: value.username,
-                    offerUsername: message.sendUsername,
-                    offerUserid: message.sendUserid,
+                    remoteUsername: message.localUsername,
+                    remoteUserid: message.localUserid,
                     roomname: message.roomname,
                   })
                 );
@@ -95,16 +91,17 @@ class Socket {
             break;
           case "answer":
             for (const value of clients.values()) {
-              if (value.username === message.sendUsername && value.roomname === message.roomname) {
+              if (
+                value.username === message.remoteUsername &&
+                value.roomname === message.roomname
+              ) {
                 value.send(
                   JSON.stringify({
                     type: "answer",
                     answer: message.answer,
                     roomname: message.roomname,
-                    username: value.username,
-                    userid: message.userid,
-                    sendUserid: message.sendUserid,
-                    sendUsername: message.sendUsername
+                    remoteUsername: message.localUsername,
+                    remoteUserid: message.localUserid,
                   })
                 );
               }
@@ -112,16 +109,17 @@ class Socket {
             break;
           case "ice":
             for (const value of clients.values()) {
-              if (value.roomname === message.roomname && value.username === message.username) {
+              if (
+                value.roomname === message.roomname &&
+                value.username === message.remoteUsername
+              ) {
                 value.send(
                   JSON.stringify({
                     type: "ice",
                     candidate: message.candidate,
                     roomname: message.roomname,
-                    username: value.username,
-                    userid: value.userid,
-                    sendUsername: message.sendUsername,
-                    sendUserid: message.sendUserid
+                    remoteUsername: message.localUsername,
+                    remoteUserid: message.localUserid,
                   })
                 );
               }
